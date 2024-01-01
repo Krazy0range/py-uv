@@ -56,6 +56,7 @@ def choose(menu, multiple=False, fancy_menu=None):
             end()
 
         if not multiple:
+            
             choice_num = 0
             try:
                 _num = int(choice)
@@ -67,10 +68,41 @@ def choose(menu, multiple=False, fancy_menu=None):
                 continue
             choice_item = menu[choice_num]
             return choice_item
+
         else:
+            
             choices = choice.split()
             choices_num = []
             try:
+                # expand ranges
+                _choices = choices.copy()
+                for index, choice in enumerate(_choices):
+                    if '-' in choice:
+                        bounds = choice.split('-')
+
+                        if len(bounds) != 2:
+                            raise Exception
+                        
+                        # valid range
+                        del choices[index]
+                        
+                        _start = int(bounds[0])
+                        _end = int(bounds[1])
+                        swapped = False
+                        
+                        if _start > _end:
+                            swapped = True
+                            _temp = _start
+                            _start = _end
+                            _end = _temp
+                        
+                        nums = range(_start, _end+1, 1)
+                        if not swapped:
+                            nums = reversed(nums)
+                            
+                        for n in nums:
+                            choices.insert(index, n)
+                
                 for num in choices:
                     _num = int(num)
                     if (_num < 0 or _num >= len(menu)):
@@ -152,6 +184,7 @@ def play_song(song, height):
             elapsed_time += 1
         except KeyboardInterrupt:
             end()
+    end()
             
 def format_time(duration):
     seconds = duration % 60
