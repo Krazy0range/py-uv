@@ -2,6 +2,7 @@ from math import floor
 import random
 import time
 import os
+import sys
 from pygame import mixer
 from mutagen.mp3 import MP3
 
@@ -10,7 +11,7 @@ width = 80
 def end():
     clear()
     mixer.quit()
-    quit()
+    sys.exit()
 
 def play_song(file_path):
     mixer.music.load(file_path)
