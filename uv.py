@@ -1,4 +1,6 @@
+from math import floor
 from pygame import mixer
+from mutagen.mp3 import MP3
 import time
 import os
 
@@ -16,6 +18,12 @@ def play_mp3(file_path):
 
     except Exception as e:
         print(f"An error occurred: {e}")
+        
+def clear():
+    os.system('cls')
+        
+def resetLine():
+    print(f"\033[A\r{' '*80}\r", end='')
 
 def choose(menu, multiple=False, fancy_menu=None):
     if len(menu) != len(fancy_menu):
@@ -37,6 +45,7 @@ def choose(menu, multiple=False, fancy_menu=None):
     while True:
         choice = input(">> ")
         if choice == "":
+            resetLine()
             continue
 
         if not multiple:
@@ -47,6 +56,7 @@ def choose(menu, multiple=False, fancy_menu=None):
                     raise Exception
                 choice_num = int(choice)
             except:
+                resetLine()
                 continue
             choice_item = menu[choice_num]
             return choice_item
@@ -60,6 +70,7 @@ def choose(menu, multiple=False, fancy_menu=None):
                         raise Exception
                     choices_num.append(_num)
             except:
+                resetLine()
                 continue
             choice_items = [menu[num] for num in choices_num]
             return choice_items
@@ -96,18 +107,54 @@ def select_songs(folder):
     vibes = choose(songs, multiple=True, fancy_menu=_songs)
     return vibes
 
+def get_time(song):
+    duration = int(MP3(song).info.length)
+    seconds = duration % 60
+    minutes = floor((duration / 60))
+    hours = floor(minutes / 60)
+    minutes %= 60
+    
+    seconds_str = str(seconds).rjust(2, '0')
+    
+    if hours > 0:
+        minutes_str = str(minutes).rjust(2, '0')
+    else:
+        minutes_str = str(minutes)
+        
+    hours_str = str(hours)
+    
+    time = ""
+    
+    if hours > 0:
+        time = f'{hours_str}:{minutes_str}:{seconds_str}'.ljust(7, ' ')
+    else:
+        time = f'{minutes_str}:{seconds_str}'.ljust(7, ' ')
+    
+    return time
+
 def play_songs(songs):
     for song in songs:
+        time = get_time(song)
+        print(f'  {time} ' +song.split('\\')[-1][0:-4])
+    
+    for index, song in enumerate(songs):
+        num = len(songs) - index
+        up = '\033[A' * num
+        down = '\n' * num
+        print(f"{up}\r>{down}", end='')
         play_mp3(song)
+        print(f"{up}\r {down}", end='')
 
 uv_folder_path = 'C:\\Users\\Teo\\Documents\\UV'
 
 if __name__ == "__main__":
     mixer.init()
     
+    clear()
     folder = select_folder()
+    clear()
     songs = select_songs(folder)
-    print(songs)
+    clear()
     play_songs(songs)
     
     mixer.quit()
