@@ -176,6 +176,9 @@ def play_songs(songs, shuffle):
 uv_folder_path = 'C:\\Users\\Teo\\Documents\\UV'
 
 def main():
+    os.system('title uv')
+    mixer.init()
+    
     clear()
     folder = select_folder()
     clear()
@@ -184,10 +187,8 @@ def main():
     shuffle = len(songs) > 1 and select_shuffle()
     clear()
     play_songs(songs, shuffle)
-
-if __name__ == "__main__":
-    mixer.init()
-    
-    main()
     
     mixer.quit()
+
+if __name__ == "__main__":
+    main()
