@@ -5,6 +5,8 @@ import os
 from pygame import mixer
 from mutagen.mp3 import MP3
 
+width = 80
+
 def end():
     clear()
     mixer.quit()
@@ -27,28 +29,29 @@ def clear():
 def resetLine():
     print(f"\033[A\r{' '*80}\r", end='')
 
+def print_menu(menu):
+    index_width = 5
+    is_even = lambda x: x % 2 == 0
+    even_off = '\033[48;5;235;3m'
+    odd_off = '\033[48;5;240;3m'
+    reset_dim = '\033[23m'
+    even = '\033[48;5;235m'
+    odd = '\033[48;5;240m'
+    reset = '\033[0m'
+    for index, item in enumerate(menu):
+        print(f'{even_off if is_even(index) else odd_off}{str(index).ljust(index_width, " ")}{reset_dim}{even if is_even(index) else odd}{item.ljust(width - index_width, " ")}{reset}')
+
 def choose(menu, multiple=False, fancy_menu=None):
     if fancy_menu:
         if len(menu) != len(fancy_menu):
             raise Exception
 
-    if fancy_menu:
-        for index, item in enumerate(fancy_menu):
-            if index < 10:
-                print(f'{index}  {item}')
-            else:
-                print(f'{index} {item}')
-    else:
-        for index, item in enumerate(menu):
-            if index < 10:
-                print(f'{index}  {item}')
-            else:
-                print(f'{index} {item}')
+    print_menu(fancy_menu or menu)
     
     while True:
         choice = ""
         try:
-            choice = input(">> ")
+            choice = input(f'\033[31m{">>".ljust(80, " ")}\033[0m\r\033[3C')
         except KeyboardInterrupt:
             end()
             
@@ -62,7 +65,7 @@ def choose(menu, multiple=False, fancy_menu=None):
         if not multiple:
             choice_num = 0
             try:
-                _num= int(choice)
+                _num = int(choice)
                 if (_num < 0 or _num >= len(menu)):
                     raise Exception
                 choice_num = int(choice)
@@ -121,7 +124,7 @@ def select_songs(folder):
 def select_shuffle():
     yes = "shuffle songs"
     no = "don't shuffle songs"
-    choice = choose([yes, no])
+    choice = choose([no, yes])
     if choice == yes:
         return True
     elif choice == no:
