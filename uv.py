@@ -1,23 +1,25 @@
 from math import floor
-from pygame import mixer
-from mutagen.mp3 import MP3
+import random
 import time
 import os
+from pygame import mixer
+from mutagen.mp3 import MP3
 
-def play_mp3(file_path):
-    try:
-        # Load the MP3 file
-        mixer.music.load(file_path)
+def end():
+    clear()
+    mixer.quit()
+    quit()
 
-        # Play the MP3 file
-        mixer.music.play()
+def play_song(file_path):
+    mixer.music.load(file_path)
 
-        # Wait while the music is playing
-        while mixer.music.get_busy():
+    mixer.music.play()
+
+    while mixer.music.get_busy():
+        try:
             time.sleep(1)
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
+        except KeyboardInterrupt:
+            end()
         
 def clear():
     os.system('cls')
@@ -26,8 +28,9 @@ def resetLine():
     print(f"\033[A\r{' '*80}\r", end='')
 
 def choose(menu, multiple=False, fancy_menu=None):
-    if len(menu) != len(fancy_menu):
-        raise Exception
+    if fancy_menu:
+        if len(menu) != len(fancy_menu):
+            raise Exception
 
     if fancy_menu:
         for index, item in enumerate(fancy_menu):
@@ -43,10 +46,18 @@ def choose(menu, multiple=False, fancy_menu=None):
                 print(f'{index} {item}')
     
     while True:
-        choice = input(">> ")
+        choice = ""
+        try:
+            choice = input(">> ")
+        except KeyboardInterrupt:
+            end()
+            
         if choice == "":
             resetLine()
             continue
+        
+        if choice == "quit":
+            end()
 
         if not multiple:
             choice_num = 0
@@ -107,6 +118,15 @@ def select_songs(folder):
     vibes = choose(songs, multiple=True, fancy_menu=_songs)
     return vibes
 
+def select_shuffle():
+    yes = "shuffle songs"
+    no = "don't shuffle songs"
+    choice = choose([yes, no])
+    if choice == yes:
+        return True
+    elif choice == no:
+        return False
+
 def get_time(song):
     duration = int(MP3(song).info.length)
     seconds = duration % 60
@@ -132,29 +152,38 @@ def get_time(song):
     
     return time
 
-def play_songs(songs):
-    for song in songs:
+def play_songs(songs, shuffle):
+    _songs = songs
+    if shuffle:
+        random.shuffle(_songs)
+    
+    for song in _songs:
         time = get_time(song)
         print(f'  {time} ' +song.split('\\')[-1][0:-4])
-    
-    for index, song in enumerate(songs):
-        num = len(songs) - index
+        
+    for index, song in enumerate(_songs):
+        num = len(_songs) - index
         up = '\033[A' * num
         down = '\n' * num
         print(f"{up}\r>{down}", end='')
-        play_mp3(song)
+        play_song(song)
         print(f"{up}\r {down}", end='')
 
 uv_folder_path = 'C:\\Users\\Teo\\Documents\\UV'
 
-if __name__ == "__main__":
-    mixer.init()
-    
+def main():
     clear()
     folder = select_folder()
     clear()
     songs = select_songs(folder)
     clear()
-    play_songs(songs)
+    shuffle = len(songs) > 1 and select_shuffle()
+    clear()
+    play_songs(songs, shuffle)
+
+if __name__ == "__main__":
+    mixer.init()
+    
+    main()
     
     mixer.quit()
