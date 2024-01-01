@@ -5,24 +5,16 @@ import os
 import sys
 from pygame import mixer
 from mutagen.mp3 import MP3
+import cursor
 
-width = 80
+width = 120
 
 def end():
     clear()
+    # print('\033[?25h')
+    cursor.show()
     mixer.quit()
     sys.exit()
-
-def play_song(file_path):
-    mixer.music.load(file_path)
-
-    mixer.music.play()
-
-    while mixer.music.get_busy():
-        try:
-            time.sleep(1)
-        except KeyboardInterrupt:
-            end()
         
 def clear():
     os.system('cls')
@@ -131,12 +123,40 @@ def select_shuffle():
     elif choice == no:
         return False
 
-def get_time(song):
-    duration = int(MP3(song).info.length)
+def spinner_gen():
+    while True:
+        yield('⠙')
+        yield('⠸')
+        yield('⠴')
+        yield('⠦')
+        yield('⠇')
+        yield('⠋')
+
+def play_song(song, height):
+    mixer.music.load(song)
+    mixer.music.play()
+    
+    elapsed_time = 0
+    up = '\033[A' * height
+    down = '\n' * height
+    
+    spinner = spinner_gen()
+    
+    while mixer.music.get_busy():
+        try:
+            t = format_time(elapsed_time)
+            print(f'{up}\r\033[41m\033[{width - len(t)}C{t}{down}\033[0m\r', end='')
+            cursor.hide()
+
+            time.sleep(1)
+            elapsed_time += 1
+        except KeyboardInterrupt:
+            end()
+            
+def format_time(duration):
     seconds = duration % 60
-    minutes = floor((duration / 60))
+    minutes = floor(duration / 60) % 60
     hours = floor(minutes / 60)
-    minutes %= 60
     
     seconds_str = str(seconds).rjust(2, '0')
     
@@ -150,28 +170,37 @@ def get_time(song):
     time = ""
     
     if hours > 0:
-        time = f'{hours_str}:{minutes_str}:{seconds_str}'.ljust(7, ' ')
+        time = f'{hours_str}:{minutes_str}:{seconds_str}'
     else:
-        time = f'{minutes_str}:{seconds_str}'.ljust(7, ' ')
+        time = f'{minutes_str}:{seconds_str}'
     
     return time
 
-def play_songs(songs, shuffle):
+def get_playing_str(song):
+    return f'{format_time(int(MP3(song).info.length)).ljust(7, " ")} ' +song.split('\\')[-1][0:-4]
+
+def play_songs(songs, shuffle):    
     _songs = songs
     if shuffle:
         random.shuffle(_songs)
     
+    after = '\033[48;5;235;2m'
+    current = '\033[41m'
+    before = '\033[48;5;240m'
+    
     for song in _songs:
-        time = get_time(song)
-        print(f'  {time} ' +song.split('\\')[-1][0:-4])
+        print(f'{before}{get_playing_str(song).ljust(width, " ")}')
         
     for index, song in enumerate(_songs):
-        num = len(_songs) - index
-        up = '\033[A' * num
-        down = '\n' * num
-        print(f"{up}\r>{down}", end='')
-        play_song(song)
-        print(f"{up}\r {down}", end='')
+        
+        height = len(_songs) - index
+        up = '\033[A' * height
+        down = '\n' * height
+        print(f'\r{up}{current}{get_playing_str(song).ljust(width, " ")}{down}\r\033[0m', end='')
+        
+        play_song(song, height)
+        
+        print(f'\r{up}{after}{get_playing_str(song).ljust(width, " ")}\033[22m{down}\r', end='')
 
 uv_folder_path = 'C:\\Users\\Teo\\Documents\\UV'
 
@@ -187,6 +216,7 @@ def main():
     shuffle = len(songs) > 1 and select_shuffle()
     clear()
     play_songs(songs, shuffle)
+    clear()
     
     mixer.quit()
 
