@@ -34,6 +34,71 @@ def print_menu(menu):
     for index, item in enumerate(menu):
         print(f'{even_off if is_even(index) else odd_off}{str(index).ljust(index_width, " ")}{reset_dim}{even if is_even(index) else odd}{item.ljust(width - index_width, " ")}{reset}')
 
+class InvalidChoice(Exception):
+    pass
+
+class RaiseInvalidChoice():
+    def __enter__(self):
+        pass
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        if exc_type == ValueError:
+            raise InvalidChoice()
+        return False
+
+def choose_one(menu, choice):
+    num = 0
+    
+    with RaiseInvalidChoice(): num = int(choice)
+    
+    if (num < 0 or num >= len(menu)):
+        raise InvalidChoice()
+    
+    choice_item = menu[num]
+    return choice_item
+
+def expand_ranges(choices):
+    _choices = choices.copy()
+    for index, choice in enumerate(_choices):
+        if '-' in choice:
+            bounds = choice.split('-')
+
+            if len(bounds) != 2:
+                raise InvalidChoice()
+
+            del choices[index]
+            
+            _start = int(bounds[0])
+            _end = int(bounds[1])
+            swapped = False
+            
+            if _start > _end:
+                swapped = True
+                _temp = _start
+                _start = _end
+                _end = _temp
+            
+            nums = range(_start, _end+1, 1)
+            if not swapped:
+                nums = reversed(nums)
+                
+            for n in nums:
+                choices.insert(index, n)
+
+def choose_multiple(menu, choice):
+    choices = choice.split()
+    choices_num = []
+    
+    expand_ranges(choices)
+    for num in choices:
+        with RaiseInvalidChoice(): _num = int(num)
+        
+        if (_num < 0 or _num >= len(menu)):
+            raise InvalidChoice()
+        choices_num.append(_num)
+    
+    choice_items = [menu[num] for num in choices_num]
+    return choice_items
+
 def choose(menu, multiple=False, fancy_menu=None):
     if fancy_menu:
         if len(menu) != len(fancy_menu):
@@ -54,85 +119,31 @@ def choose(menu, multiple=False, fancy_menu=None):
         
         if choice == "quit":
             end()
-
-        if not multiple:
             
-            choice_num = 0
-            try:
-                _num = int(choice)
-                if (_num < 0 or _num >= len(menu)):
-                    raise Exception
-                choice_num = int(choice)
-            except:
-                resetLine()
-                continue
-            choice_item = menu[choice_num]
-            return choice_item
+        result = None
 
+        try:
+            if not multiple:
+                result = choose_one(menu, choice)
+            else:
+                result = choose_multiple(menu, choice)
+        except InvalidChoice:
+            resetLine()
+            continue
         else:
-            
-            choices = choice.split()
-            choices_num = []
-            try:
-                # expand ranges
-                _choices = choices.copy()
-                for index, choice in enumerate(_choices):
-                    if '-' in choice:
-                        bounds = choice.split('-')
-
-                        if len(bounds) != 2:
-                            raise Exception
-                        
-                        # valid range
-                        del choices[index]
-                        
-                        _start = int(bounds[0])
-                        _end = int(bounds[1])
-                        swapped = False
-                        
-                        if _start > _end:
-                            swapped = True
-                            _temp = _start
-                            _start = _end
-                            _end = _temp
-                        
-                        nums = range(_start, _end+1, 1)
-                        if not swapped:
-                            nums = reversed(nums)
-                            
-                        for n in nums:
-                            choices.insert(index, n)
-                
-                for num in choices:
-                    _num = int(num)
-                    if (_num < 0 or _num >= len(menu)):
-                        raise Exception
-                    choices_num.append(_num)
-            except:
-                resetLine()
-                continue
-            choice_items = [menu[num] for num in choices_num]
-            return choice_items
+            return result
 
 def get_subfolders(directory):
-    try:
-        subfolders = [f.path for f in os.scandir(directory) if f.is_dir()]
-        return subfolders
-    except OSError as e:
-        print(f"Error: {e}")
-        return []
+    subfolders = [f.path for f in os.scandir(directory) if f.is_dir()]
+    return subfolders
 
 def get_files(directory):
-    try:
-        files = [f.path for f in os.scandir(directory) if f.is_file()]
+    files = [f.path for f in os.scandir(directory) if f.is_file()]
+    
+    if directory + '\\desktop.ini' in files:
+        files.remove(directory + '\\desktop.ini')
         
-        if directory + '\\desktop.ini' in files:
-            files.remove(directory + '\\desktop.ini')
-            
-        return files
-    except OSError as e:
-        print(f"Error: {e}")
-        return []
+    return files
 
 def select_folder():
     folder = get_subfolders(uv_folder_path)
@@ -184,7 +195,10 @@ def play_song(song, height):
             elapsed_time += 1
         except KeyboardInterrupt:
             end()
-    end()
+            
+    last_song_in_queue = height == 1
+    if last_song_in_queue:
+        end()
             
 def format_time(duration):
     seconds = duration % 60
@@ -220,6 +234,7 @@ def play_songs(songs, shuffle):
     after = '\033[48;5;235;2m'
     current = '\033[41m'
     before = '\033[48;5;240m'
+    
     
     for song in _songs:
         print(f'{before}{get_playing_str(song).ljust(width, " ")}')
