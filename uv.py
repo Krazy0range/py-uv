@@ -194,7 +194,7 @@ def play_song(song, height, remaining_time):
         try:
             elapsed_time_str = format_time(elapsed_time)
             remaining_time_str = format_time(remaining_time - elapsed_time)
-            print(f'{up}\r\033[37;41m\033[{width - len(elapsed_time_str)}C{elapsed_time_str}\r{down}\033[0m\r{remaining_time_str}{" " * (width - len(remaining_time_str))}\r\n\033[42m{" " * width}\033[0m\r\033[A', end='')
+            print(f'{up}\r\033[37;41m\033[{width - len(elapsed_time_str)}C{elapsed_time_str}\r{down}\033[0m\r{remaining_time_str}{" " * (width - len(remaining_time_str))}\r', end='')
 
             cursor.hide()
             time.sleep(1)
