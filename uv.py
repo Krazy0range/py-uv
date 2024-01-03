@@ -180,7 +180,7 @@ def get_duration(song):
 
 def get_playing_str(song):
     song_name = song.split("\\")[-1][0:-4]
-    return f'\033[37m{format_time(get_duration(song)).ljust(7, " ")} {song_name}'
+    return f'{format_time(get_duration(song)).ljust(8, " ")}{song_name}'
 
 def play_song(song, height, remaining_time):
     mixer.music.load(song)
@@ -194,7 +194,7 @@ def play_song(song, height, remaining_time):
         try:
             elapsed_time_str = format_time(elapsed_time)
             remaining_time_str = format_time(remaining_time - elapsed_time)
-            print(f'{up}\r\033[37;41m\033[{width - len(elapsed_time_str)}C\033[5D{" " * 5}{elapsed_time_str}\r{down}\033[0m\r{remaining_time_str}{" " * (width - len(remaining_time_str))}\r', end='')
+            print(f'{up}\r\033[37;41m\033[{width - len(elapsed_time_str)}C{elapsed_time_str}\r{down}\033[0m\r{remaining_time_str}{" " * (width - len(remaining_time_str))}\r\n\033[42m{" " * width}\033[0m\r\033[A', end='')
 
             cursor.hide()
             time.sleep(1)
@@ -211,19 +211,20 @@ def play_songs(songs, shuffle):
     if shuffle:
         random.shuffle(_songs)
     
+    white = '\033[37m'
     after = '\033[48;5;235;2m'
     current = '\033[41m'
     before = '\033[48;5;240m'
     
     for song in _songs:
-        print(f'{before}{get_playing_str(song).ljust(width, " ")}')
+        print(f'{white}{before}{get_playing_str(song).ljust(width, " ")}')
         
     for index, song in enumerate(_songs):
         
         height = len(_songs) - index
         up = '\033[A' * height
         down = '\n' * height
-        print(f'\r{up}{current}{get_playing_str(song).ljust(width, " ")}{down}\r\033[0m', end='')
+        print(f'\r{white}{up}{current}{get_playing_str(song).ljust(width, " ")}{down}\r\033[0m', end='')
         
         remaining_time = 0
         for i in range(index, len(_songs)):
@@ -231,7 +232,7 @@ def play_songs(songs, shuffle):
             
         play_song(song, height, remaining_time)
         
-        print(f'\r{up}{after}{get_playing_str(song).ljust(width, " ")}\033[22m{down}\r', end='')
+        print(f'\r{white}{up}{after}{get_playing_str(song).ljust(width, " ")}\033[22m{down}\r', end='')
 
 # PROGRAM FLOW
 
