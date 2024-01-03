@@ -37,6 +37,7 @@ def resetLine():
 
 def print_menu(menu):
     index_width = 5
+    white_foreground = '\033[37m'
     is_even = lambda x: x % 2 == 0
     even_off = '\033[48;5;235;3m'
     odd_off = '\033[48;5;240;3m'
@@ -45,7 +46,7 @@ def print_menu(menu):
     odd = '\033[48;5;240m'
     reset = '\033[0m'
     for index, item in enumerate(menu):
-        print(f'{even_off if is_even(index) else odd_off}{str(index).ljust(index_width, " ")}{reset_dim}{even if is_even(index) else odd}{item.ljust(width - index_width, " ")}{reset}')
+        print(f'{white_foreground}{even_off if is_even(index) else odd_off}{str(index).ljust(index_width, " ")}{reset_dim}{even if is_even(index) else odd}{item.ljust(width - index_width, " ")}{reset}')
 
 def choose_one(menu, choice):
     num = 0
@@ -178,7 +179,8 @@ def get_duration(song):
     return int(MP3(song).info.length)
 
 def get_playing_str(song):
-    return f'{format_time(get_duration(song)).ljust(7, " ")} ' +song.split('\\')[-1][0:-4]
+    song_name = song.split("\\")[-1][0:-4]
+    return f'\033[37m{format_time(get_duration(song)).ljust(7, " ")} {song_name}'
 
 def play_song(song, height, remaining_time):
     mixer.music.load(song)
@@ -192,7 +194,7 @@ def play_song(song, height, remaining_time):
         try:
             elapsed_time_str = format_time(elapsed_time)
             remaining_time_str = format_time(remaining_time - elapsed_time)
-            print(f'{up}\r\033[41m\033[{width - len(elapsed_time_str)}C{elapsed_time_str}{down}\033[0m\r{remaining_time_str}{" " * (width - len(remaining_time_str))}\r', end='')
+            print(f'{up}\r\033[37;41m\033[{width - len(elapsed_time_str)}C\033[5D{" " * 5}{elapsed_time_str}\r{down}\033[0m\r{remaining_time_str}{" " * (width - len(remaining_time_str))}\r', end='')
 
             cursor.hide()
             time.sleep(1)
@@ -212,7 +214,6 @@ def play_songs(songs, shuffle):
     after = '\033[48;5;235;2m'
     current = '\033[41m'
     before = '\033[48;5;240m'
-    
     
     for song in _songs:
         print(f'{before}{get_playing_str(song).ljust(width, " ")}')
