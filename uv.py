@@ -9,12 +9,16 @@ from mutagen.mp3 import MP3
 import cursor
 
 # TODO: fix remaining time counter :/
+# TODO  by supporting > 1h times
 
 width = 120
 uv_folder_path = 'C:\\Users\\Teo\\Documents\\UV'
 playlists_path = 'playlists.json'
 
 class InvalidChoice(Exception):
+    pass
+
+class Home(Exception):
     pass
 
 class RaiseInvalidChoice():
@@ -39,14 +43,16 @@ def write_playlists(path, playlists):
 
 def select_playlist():
     playlists = load_playlists(playlists_path)
+    if len(playlists) == 0:
+        _ = choose_free("No playlists created.")
+        raise Home()
     playlist_name = choose(list(playlists.keys()))
     clear()
     playlist = playlists[playlist_name]
     return playlist, playlist_name
 
 def new_playlist():
-    print('Enter new playlist name:\n\033[31m>>\033[0m ', end='')
-    name = input()
+    name = choose_free('Enter new playlist name:')
     clear()
     playlist = []
     songs = select_folder_and_songs()
@@ -56,12 +62,10 @@ def new_playlist():
     playlists[name] = playlist
     write_playlists(playlists_path, playlists)
     
-    
 def delete_playlist():
     playlists = load_playlists(playlists_path)
-    playlist = choose(list(playlists.keys()))
-    clear()
-    del playlists[playlist]
+    _, name = select_playlist()
+    del playlists[name]
     write_playlists(playlists_path, playlists)
 
 def add_songs_to_playlists():
@@ -86,6 +90,9 @@ def remove_songs_from_playlists():
 
 # SYSTEM STUFF
 
+def home():
+    raise Home()
+
 def end():
     clear()
     cursor.show()
@@ -96,7 +103,19 @@ def clear():
     os.system('cls')
     
 # CHOOSE
+
+def choose_free(prompt):
+    print(f'{prompt}\n\033[31m>>\033[0m ', end='')
+    user = input()
+    
+    if user == 'home':
+        home()
+    
+    if user == 'quit':
+        end()
         
+    return user
+
 def resetLine():
     print(f"\033[A\r{' '*80}\r", end='')
 
@@ -180,6 +199,9 @@ def choose_loop(menu, multiple):
         
     if choice == "":
         raise InvalidChoice()
+    
+    if choice == 'home':
+        home()
     
     if choice == "quit":
         end()
@@ -265,7 +287,9 @@ def play_song(song, height, remaining_time):
             time.sleep(1)
             elapsed_time += 1
         except KeyboardInterrupt:
-            end()
+            mixer.music.stop()
+            cursor.show()
+            home()
             
     last_song_in_queue = height == 1
     if last_song_in_queue:
@@ -394,7 +418,11 @@ def main():
     mixer.init()
     
     clear()
-    start_menu()
+    while True:
+        try:
+            start_menu()
+        except Home:
+            continue
     clear()
     
     mixer.quit()
