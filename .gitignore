@@ -2,3 +2,4 @@
 build/
 dist/
 uv.spec
+playlists.json

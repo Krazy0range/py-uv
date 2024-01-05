@@ -3,12 +3,16 @@ import random
 import time
 import os
 import sys
+import json
 from pygame import mixer
 from mutagen.mp3 import MP3
 import cursor
 
+# TODO: fix remaining time counter :/
+
 width = 120
 uv_folder_path = 'C:\\Users\\Teo\\Documents\\UV'
+playlists_path = 'playlists.json'
 
 class InvalidChoice(Exception):
     pass
@@ -20,6 +24,67 @@ class RaiseInvalidChoice():
         if exc_type == ValueError:
             raise InvalidChoice()
         return False
+
+# PLAYLISTS
+
+def load_playlists(path):
+    data = None
+    with open(path, 'r') as f:
+        data = json.load(f)
+    return data
+
+def write_playlists(path, playlists):
+    with open(path, 'w') as f:
+        json.dump(playlists, f, indent=4)
+
+def select_playlist():
+    playlists = load_playlists(playlists_path)
+    playlist_name = choose(list(playlists.keys()))
+    clear()
+    playlist = playlists[playlist_name]
+    return playlist, playlist_name
+
+def new_playlist():
+    print('Enter new playlist name:\n\033[31m>>\033[0m ', end='')
+    name = input()
+    clear()
+    playlist = []
+    songs = select_folder_and_songs()
+    for song in songs:
+        playlist.append(song)
+    playlists = load_playlists(playlists_path)
+    playlists[name] = playlist
+    write_playlists(playlists_path, playlists)
+    
+    
+def delete_playlist():
+    playlists = load_playlists(playlists_path)
+    playlist = choose(list(playlists.keys()))
+    clear()
+    del playlists[playlist]
+    write_playlists(playlists_path, playlists)
+
+def add_songs_to_playlists():
+    playlist, name = select_playlist()
+    songs = select_folder_and_songs()
+    for song in songs:
+        playlist.append(song)
+    playlists = load_playlists(playlists_path)
+    playlists[name] = playlist
+    write_playlists(playlists_path, playlists)
+
+def remove_songs_from_playlists():
+    playlist, name = select_playlist()
+    _playlist = [song.split('\\')[-1][0:-4] for song in playlist]
+    songs = choose(playlist, multiple=True, fancy_menu=_playlist)
+    clear()
+    for song in songs:
+        playlist.remove(song)
+    playlists = load_playlists(playlists_path)
+    playlists[name] = playlist
+    write_playlists(playlists_path, playlists)
+
+# SYSTEM STUFF
 
 def end():
     clear()
@@ -260,6 +325,13 @@ def select_songs(folder):
     vibes = choose(songs, multiple=True, fancy_menu=_songs)
     return vibes
 
+def select_folder_and_songs():
+    folder = select_folder()
+    clear()
+    songs = select_songs(folder)
+    clear()
+    return songs
+
 def select_shuffle():
     yes = "shuffle songs"
     no = "don't shuffle songs"
@@ -268,19 +340,61 @@ def select_shuffle():
         return True
     elif choice == no:
         return False
+    
+def play_uv_songs():
+    songs = select_folder_and_songs()
+    shuffle = len(songs) > 1 and select_shuffle()
+    clear()
+    play_songs(songs, shuffle)
+    clear()
+
+def play_playlist():
+    playlist, _ = select_playlist()
+    clear()
+    play_songs(playlist, False)
+    clear()
+
+def edit_playlists():
+    choice_new_playlist = 'new playlist'
+    choice_delete_playlist = 'delete playlist'
+    choice_add_songs_to_playlist = 'add songs to playlist'
+    choice_remove_songs_from_playlist = 'remove songs from playlist'
+    choice = choose([
+        choice_new_playlist,
+        choice_delete_playlist,
+        choice_add_songs_to_playlist,
+        choice_remove_songs_from_playlist
+    ])
+    clear()
+    if choice == choice_new_playlist:
+        new_playlist()
+    elif choice == choice_delete_playlist:
+        delete_playlist()
+    elif choice == choice_add_songs_to_playlist:
+        add_songs_to_playlists()
+    elif choice == choice_remove_songs_from_playlist:
+        remove_songs_from_playlists()
+
+def start_menu():
+    clear()
+    choice_play_songs = 'play uv songs'
+    choice_play_playlist = 'play playlist'
+    choice_edit_playlists = 'edit playlists'
+    choice = choose([choice_play_songs, choice_play_playlist, choice_edit_playlists])
+    clear()
+    if choice == choice_play_songs:
+        play_uv_songs()
+    elif choice == choice_play_playlist:
+        play_playlist()
+    elif choice == choice_edit_playlists:
+        edit_playlists()
 
 def main():
     os.system('title uv')
     mixer.init()
     
     clear()
-    folder = select_folder()
-    clear()
-    songs = select_songs(folder)
-    clear()
-    shuffle = len(songs) > 1 and select_shuffle()
-    clear()
-    play_songs(songs, shuffle)
+    start_menu()
     clear()
     
     mixer.quit()
