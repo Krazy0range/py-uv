@@ -13,6 +13,20 @@ import cursor
 # TODO  ex: you should be able to view
 # TODO  a playlist without having to
 # TODO  select "remove songs"
+#       "view playlists" option
+#       each playlist view displays the
+#       songs of the playlist, and you
+#       can select to play the songs
+#       or edit them 
+#       requires adding menu titles!
+#       this also requires tracking
+#       the views you go through
+#       ...which paves the way for
+#       a back command :) sounds like 
+#       a plan!
+# TODO: 1. add menu titles
+# TODO: 2. add view tracking
+# TODO: 3. add back command
 
 width = 120
 uv_folder_path = 'C:\\Users\\Teo\\Documents\\UV'
