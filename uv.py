@@ -8,6 +8,8 @@ from pygame import mixer
 from mutagen.mp3 import MP3
 import cursor
 
+# TODO: ADD MENU TITLES
+
 # TODO: rework playlist system to make
 # TODO  playlists more accessible
 # TODO  ex: you should be able to view
@@ -63,7 +65,7 @@ def select_playlist():
     if len(playlists) == 0:
         _ = choose_free("No playlists created.")
         raise Home()
-    playlist_name = choose(list(playlists.keys()))
+    playlist_name = choose("select playlist", list(playlists.keys()))
     clear()
     playlist = playlists[playlist_name]
     return playlist, playlist_name
@@ -97,7 +99,7 @@ def add_songs_to_playlists():
 def remove_songs_from_playlists():
     playlist, name = select_playlist()
     _playlist = [song.split('\\')[-1][0:-4] for song in playlist]
-    songs = choose(playlist, multiple=True, fancy_menu=_playlist)
+    songs = choose("remove songs", playlist, multiple=True, fancy_menu=_playlist)
     clear()
     for song in songs:
         playlist.remove(song)
@@ -244,10 +246,11 @@ def choose_loop(menu, multiple):
     
     return result
 
-def choose(menu, multiple=False, fancy_menu=None):
+def choose(prompt, menu, multiple=False, fancy_menu=None):
     if fancy_menu and len(menu) != len(fancy_menu):
         raise Exception
 
+    print(f'\033[41;37m{prompt.ljust(width, " ")}\033[0m')
     print_menu(fancy_menu or menu)
     
     while True:
@@ -369,13 +372,13 @@ def get_files(directory):
 def select_folder():
     folder = get_subfolders(uv_folder_path)
     _folders = [folder.split('\\')[-1] for folder in folder]
-    folder = choose(folder, fancy_menu=_folders)
+    folder = choose("select folder", folder, fancy_menu=_folders)
     return folder
 
 def select_songs(folder):
     songs = get_files(folder)
     _songs = [song.split('\\')[-1][0:-4] for song in songs]
-    vibes = choose(songs, multiple=True, fancy_menu=_songs)
+    vibes = choose("select songs", songs, multiple=True, fancy_menu=_songs)
     return vibes
 
 def select_folder_and_songs():
@@ -388,7 +391,7 @@ def select_folder_and_songs():
 def select_shuffle():
     yes = "shuffle songs"
     no = "don't shuffle songs"
-    choice = choose([no, yes])
+    choice = choose("select shuffle", [no, yes])
     if choice == yes:
         return True
     elif choice == no:
@@ -406,7 +409,7 @@ def edit_playlists():
     choice_delete_playlist = 'delete playlist'
     choice_add_songs_to_playlist = 'add songs to playlist'
     choice_remove_songs_from_playlist = 'remove songs from playlist'
-    choice = choose([
+    choice = choose("edit playlists", [
         choice_new_playlist,
         choice_delete_playlist,
         choice_add_songs_to_playlist,
@@ -427,7 +430,7 @@ def start_menu():
     choice_play_songs = 'play uv songs'
     choice_play_playlist = 'play playlist'
     choice_edit_playlists = 'edit playlists'
-    choice = choose([choice_play_songs, choice_play_playlist, choice_edit_playlists])
+    choice = choose("start menu", [choice_play_songs, choice_play_playlist, choice_edit_playlists])
     clear()
     if choice == choice_play_songs:
         play_uv_songs()
