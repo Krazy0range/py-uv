@@ -11,9 +11,21 @@ import cursor
 # TODO: fix remaining time counter :/
 # TODO  by supporting > 1h times
 
+# TODO: fix range expansion to allow
+# TODO  to allow multiple ranges in
+# TODO  one prompt
+
+# TODO: rework playlist system to make
+# TODO  playlists more accessible
+# TODO  ex: you should be able to view
+# TODO  a playlist without having to
+# TODO  select "remove songs"
+
+# TODO: add shuffle to playlists
+
 width = 120
 uv_folder_path = 'C:\\Users\\Teo\\Documents\\UV'
-playlists_path = 'playlists.json'
+playlists_path = 'C:\\Users\\Teo\\Desktop\\hac\\piton-stuf\\py-uv\\playlists.json'
 
 class InvalidChoice(Exception):
     pass
@@ -87,6 +99,14 @@ def remove_songs_from_playlists():
     playlists = load_playlists(playlists_path)
     playlists[name] = playlist
     write_playlists(playlists_path, playlists)
+
+def play_playlist():
+    playlist, _ = select_playlist()
+    clear()
+    shuffle = len(playlist) > 1 and select_shuffle()
+    clear()
+    play_songs(playlist, shuffle)
+    clear()
 
 # SYSTEM STUFF
 
@@ -370,12 +390,6 @@ def play_uv_songs():
     shuffle = len(songs) > 1 and select_shuffle()
     clear()
     play_songs(songs, shuffle)
-    clear()
-
-def play_playlist():
-    playlist, _ = select_playlist()
-    clear()
-    play_songs(playlist, False)
     clear()
 
 def edit_playlists():
