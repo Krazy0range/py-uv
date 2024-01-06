@@ -8,17 +8,11 @@ from pygame import mixer
 from mutagen.mp3 import MP3
 import cursor
 
-# TODO: fix range expansion to allow
-# TODO  to allow multiple ranges in
-# TODO  one prompt
-
 # TODO: rework playlist system to make
 # TODO  playlists more accessible
 # TODO  ex: you should be able to view
 # TODO  a playlist without having to
 # TODO  select "remove songs"
-
-# TODO: add shuffle to playlists
 
 width = 120
 uv_folder_path = 'C:\\Users\\Teo\\Documents\\UV'
@@ -123,7 +117,10 @@ def clear():
 
 def choose_free(prompt):
     print(f'{prompt}\n\033[31m>>\033[0m ', end='')
-    user = input()
+    try:
+        user = input()
+    except KeyboardInterrupt:
+        home()
     
     if user == 'home':
         home()
@@ -183,20 +180,21 @@ def expand_range(choice):
     return nums
 
 def expand_ranges(choices):
-    _choices = choices.copy()
-    for index, choice in enumerate(_choices):
-        if '-' in choice:
-            del choices[index]
-            
+    _choices = []
+    for choice in choices:
+        if '-' in choice:            
             expanded_range = expand_range(choice)
             for num in expanded_range:
-                choices.insert(index, num)
+                _choices.append(num)
+        else:
+            _choices.append(choice)
+    return _choices
 
 def choose_multiple(menu, choice):
     choices = choice.split()
     choices_num = []
     
-    expand_ranges(choices)
+    choices = expand_ranges(choices)
     for num in choices:
         with RaiseInvalidChoice(): _num = int(num)
         
@@ -212,7 +210,7 @@ def choose_loop(menu, multiple):
     try:
         choice = input(f'\033[31m{">>".ljust(80, " ")}\033[0m\r\033[3C')
     except KeyboardInterrupt:
-        end()
+        home()
         
     if choice == "":
         raise InvalidChoice()
