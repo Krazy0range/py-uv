@@ -8,9 +8,6 @@ from pygame import mixer
 from mutagen.mp3 import MP3
 import cursor
 
-# TODO: fix remaining time counter :/
-# TODO  by supporting > 1h times
-
 # TODO: fix range expansion to allow
 # TODO  to allow multiple ranges in
 # TODO  one prompt
@@ -262,7 +259,7 @@ def spinner_gen():
 def format_time(duration):
     seconds = duration % 60
     minutes = floor(duration / 60) % 60
-    hours = floor(minutes / 60)
+    hours = floor(duration / 3600)
     
     seconds_str = str(seconds).rjust(2, '0')
     
@@ -287,7 +284,7 @@ def get_duration(song):
 
 def get_playing_str(song):
     song_name = song.split("\\")[-1][0:-4]
-    return f'{format_time(get_duration(song)).ljust(8, " ")}{song_name}'
+    return f'{format_time(get_duration(song)).ljust(10, " ")}{song_name}'
 
 def play_song(song, height, remaining_time):
     mixer.music.load(song)
