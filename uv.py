@@ -8,6 +8,8 @@ from pygame import mixer
 from mutagen.mp3 import MP3
 import cursor
 
+# TODO: add song length info
+
 width = 120
 uv_folder_path = 'C:\\Users\\Teo\\Documents\\UV'
 playlists_path = 'C:\\Users\\Teo\\Desktop\\hac\\piton-stuf\\py-uv\\playlists.json'
@@ -163,7 +165,12 @@ def choose_free(prompt, prompt_fancy=None):
 def resetLine():
     print(f"\033[A\r{' '*width}\r", end='')
 
-def print_menu(menu):
+def print_menu(menu, fancy_menu=None):
+    _menu = fancy_menu or menu
+    extra_menu = None
+    if fancy_menu:
+        extra_menu = menu
+    
     index_width = 5
     white_foreground = '\033[37m'
     is_even = lambda x: x % 2 == 0
@@ -173,8 +180,14 @@ def print_menu(menu):
     even = '\033[48;5;235m'
     odd = '\033[48;5;240m'
     reset = '\033[0m'
-    for index, item in enumerate(menu):
-        print(f'{white_foreground}{even_off if is_even(index) else odd_off} {str(index).ljust(index_width, " ")}{reset_dim}{even if is_even(index) else odd}{item.ljust(width - index_width, " ")}{reset}')
+    for index, item in enumerate(_menu):
+        time = ''
+        if extra_menu and extra_menu[index][-4:] == '.mp3':
+            time = format_time(get_duration(extra_menu[index]))
+            time = f'\033[{len(time) + 1}D{time}'
+        off = f'{even_off if is_even(index) else odd_off}'
+        on = f'{even if is_even(index) else odd}'
+        print(f'{white_foreground}{off} {str(index).ljust(index_width, " ")}{reset_dim}{on}{item.ljust(width - index_width, " ")}{time}{reset}')
 
 def choose_one(menu, choice):
     num = 0
@@ -266,7 +279,7 @@ def choose(prompt, menu, multiple=False, fancy_menu=None, add_answer=False):
 
     promptPath.add_prompt(prompt)
     print_prompt()
-    print_menu(fancy_menu or menu)
+    print_menu(menu, fancy_menu)
     
     while True:
         try:
