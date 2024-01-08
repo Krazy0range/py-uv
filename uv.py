@@ -136,14 +136,14 @@ def clear():
 # CHOOSE
 
 def print_prompt():
-    print(f'\033[31;3;48;5;233m{promptPath.get_prompt_path().ljust(width, " ")}\033[0m')
+    print(f'\033[31;3;48;5;233m {promptPath.get_prompt_path().ljust(width, " ")}\033[0m')
 
 def choose_free(prompt, prompt_fancy=None):
     
     promptPath.add_prompt(prompt)
     print_prompt()
-    print(f'\033[37;48;5;235m{(prompt_fancy or prompt).ljust(width, " ")}')
-    print(f'\033[31;48;5;233m{">>".ljust(width, " ")}\r\033[3C', end='')
+    print(f'\033[37;48;5;235m {(prompt_fancy or prompt).ljust(width, " ")}')
+    print(f'\033[31;48;5;233m {">>".ljust(width, " ")}\r\033[4C', end='')
     
     try:
         user = input()
@@ -161,7 +161,7 @@ def choose_free(prompt, prompt_fancy=None):
     return user
 
 def resetLine():
-    print(f"\033[A\r{' '*80}\r", end='')
+    print(f"\033[A\r{' '*width}\r", end='')
 
 def print_menu(menu):
     index_width = 5
@@ -174,7 +174,7 @@ def print_menu(menu):
     odd = '\033[48;5;240m'
     reset = '\033[0m'
     for index, item in enumerate(menu):
-        print(f'{white_foreground}{even_off if is_even(index) else odd_off}{str(index).ljust(index_width, " ")}{reset_dim}{even if is_even(index) else odd}{item.ljust(width - index_width, " ")}{reset}')
+        print(f'{white_foreground}{even_off if is_even(index) else odd_off} {str(index).ljust(index_width, " ")}{reset_dim}{even if is_even(index) else odd}{item.ljust(width - index_width, " ")}{reset}')
 
 def choose_one(menu, choice):
     num = 0
@@ -238,7 +238,7 @@ def choose_multiple(menu, choice):
 def choose_loop(menu, multiple):
     choice = ""
     try:
-        choice = input(f'\033[31;48;5;233m{">>".ljust(width, " ")}\r\033[3C')
+        choice = input(f'\033[31;48;5;233m {">>".ljust(width, " ")}\r\033[4C')
     except KeyboardInterrupt:
         home()
         
@@ -331,7 +331,7 @@ def play_song(song, height, remaining_time):
         try:
             elapsed_time_str = format_time(elapsed_time)
             remaining_time_str = format_time(remaining_time - elapsed_time)
-            print(f'{up}\r\033[37;41m\033[{width - len(elapsed_time_str)}C{elapsed_time_str}\r{down}\033[0m\r\033[31;48;5;233m{remaining_time_str.ljust(width, " ")}\033[0m\r', end='')
+            print(f'{up}\r\033[37;41m\033[{width - len(elapsed_time_str)}C{elapsed_time_str}\r{down}\033[0m\r\033[31;48;5;233m {remaining_time_str.ljust(width, " ")}\033[0m\r', end='')
 
             cursor.hide()
             time.sleep(1)
@@ -356,14 +356,14 @@ def play_songs(songs, shuffle):
     before = '\033[48;5;240m'
     
     for song in _songs:
-        print(f'{white}{before}{get_playing_str(song).ljust(width, " ")}')
+        print(f'{white}{before} {get_playing_str(song).ljust(width, " ")}')
         
     for index, song in enumerate(_songs):
         
         height = len(_songs) - index
         up = '\033[A' * height
         down = '\n' * height
-        print(f'\r{white}{up}{current}{get_playing_str(song).ljust(width, " ")}{down}\r\033[0m', end='')
+        print(f'\r{white}{up}{current} {get_playing_str(song).ljust(width, " ")}{down}\r\033[0m', end='')
         
         remaining_time = 0
         for i in range(index, len(_songs)):
@@ -371,7 +371,7 @@ def play_songs(songs, shuffle):
             
         play_song(song, height, remaining_time)
         
-        print(f'\r{white}{up}{after}{get_playing_str(song).ljust(width, " ")}\033[22m{down}\r', end='')
+        print(f'\r{white}{up}{after} {get_playing_str(song).ljust(width, " ")}\033[22m{down}\r', end='')
 
 # PROGRAM FLOW
 
