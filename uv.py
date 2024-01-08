@@ -8,28 +8,6 @@ from pygame import mixer
 from mutagen.mp3 import MP3
 import cursor
 
-# TODO: ADD MENU TITLES
-
-# TODO: rework playlist system to make
-# TODO  playlists more accessible
-# TODO  ex: you should be able to view
-# TODO  a playlist without having to
-# TODO  select "remove songs"
-#       "view playlists" option
-#       each playlist view displays the
-#       songs of the playlist, and you
-#       can select to play the songs
-#       or edit them 
-#       requires adding menu titles!
-#       this also requires tracking
-#       the views you go through
-#       ...which paves the way for
-#       a back command :) sounds like 
-#       a plan!
-# TODO: 1. add menu titles
-# TODO: 2. add view tracking
-# TODO: 3. add back command
-
 width = 120
 uv_folder_path = 'C:\\Users\\Teo\\Documents\\UV'
 playlists_path = 'C:\\Users\\Teo\\Desktop\\hac\\piton-stuf\\py-uv\\playlists.json'
@@ -48,6 +26,30 @@ class RaiseInvalidChoice():
             raise InvalidChoice()
         return False
 
+class PromptPath:
+    
+    def __init__(self):
+        self.prompts = []
+        
+    def add_prompt(self, prompt):
+        self.prompts.append(prompt)
+    
+    def add_answer(self, answer):
+        self.prompts[-1] += f' ({answer})'
+    
+    def reset_path(self):
+        self.prompts = []
+    
+    def get_prompt_path(self):
+        path = ''
+        for i, prompt in enumerate(self.prompts):
+            path += prompt
+            if i != len(self.prompts) - 1:
+                path += ' > '
+        return path
+
+promptPath = PromptPath()
+
 # PLAYLISTS
 
 def load_playlists(path):
@@ -60,18 +62,18 @@ def write_playlists(path, playlists):
     with open(path, 'w') as f:
         json.dump(playlists, f, indent=4)
 
-def select_playlist():
+def select_playlist(prompt=None):
     playlists = load_playlists(playlists_path)
     if len(playlists) == 0:
-        _ = choose_free("No playlists created.")
+        _ = choose_free('no playlists', 'No playlists created.')
         raise Home()
-    playlist_name = choose("select playlist", list(playlists.keys()))
+    playlist_name = choose(prompt or "select playlist", list(playlists.keys()), add_answer=True)
     clear()
     playlist = playlists[playlist_name]
     return playlist, playlist_name
 
 def new_playlist():
-    name = choose_free('Enter new playlist name:')
+    name = choose_free('playlist name', 'Enter new playlist name:')
     clear()
     playlist = []
     songs = select_folder_and_songs()
@@ -83,12 +85,12 @@ def new_playlist():
     
 def delete_playlist():
     playlists = load_playlists(playlists_path)
-    _, name = select_playlist()
+    _, name = select_playlist('delete playlist')
     del playlists[name]
     write_playlists(playlists_path, playlists)
 
 def add_songs_to_playlists():
-    playlist, name = select_playlist()
+    playlist, name = select_playlist('add songs to playlist')
     songs = select_folder_and_songs()
     for song in songs:
         playlist.append(song)
@@ -97,7 +99,7 @@ def add_songs_to_playlists():
     write_playlists(playlists_path, playlists)
 
 def remove_songs_from_playlists():
-    playlist, name = select_playlist()
+    playlist, name = select_playlist('remove songs from playlist')
     _playlist = [song.split('\\')[-1][0:-4] for song in playlist]
     songs = choose("remove songs", playlist, multiple=True, fancy_menu=_playlist)
     clear()
@@ -108,7 +110,7 @@ def remove_songs_from_playlists():
     write_playlists(playlists_path, playlists)
 
 def play_playlist():
-    playlist, _ = select_playlist()
+    playlist, _ = select_playlist('play playlist')
     clear()
     shuffle = len(playlist) > 1 and select_shuffle()
     clear()
@@ -118,21 +120,31 @@ def play_playlist():
 # SYSTEM STUFF
 
 def home():
+    promptPath.reset_path()
     raise Home()
 
 def end():
     clear()
+    print('\033[0m', end='')
     cursor.show()
     mixer.quit()
     sys.exit()
         
 def clear():
     os.system('cls')
-    
+
 # CHOOSE
 
-def choose_free(prompt):
-    print(f'{prompt}\n\033[31m>>\033[0m ', end='')
+def print_prompt():
+    print(f'\033[31;3;48;5;233m{promptPath.get_prompt_path().ljust(width, " ")}\033[0m')
+
+def choose_free(prompt, prompt_fancy=None):
+    
+    promptPath.add_prompt(prompt)
+    print_prompt()
+    print(f'\033[37;48;5;235m{(prompt_fancy or prompt).ljust(width, " ")}')
+    print(f'\033[31;48;5;233m{">>".ljust(width, " ")}\r\033[3C', end='')
+    
     try:
         user = input()
     except KeyboardInterrupt:
@@ -143,6 +155,8 @@ def choose_free(prompt):
     
     if user == 'quit':
         end()
+    
+    promptPath.add_answer(user)
         
     return user
 
@@ -190,7 +204,7 @@ def expand_range(choice):
         _end = _temp
     
     nums = range(_start, _end+1, 1)
-    if not swapped:
+    if swapped:
         nums = reversed(nums)
     
     return nums
@@ -224,7 +238,7 @@ def choose_multiple(menu, choice):
 def choose_loop(menu, multiple):
     choice = ""
     try:
-        choice = input(f'\033[31m{">>".ljust(80, " ")}\033[0m\r\033[3C')
+        choice = input(f'\033[31;48;5;233m{">>".ljust(width, " ")}\r\033[3C')
     except KeyboardInterrupt:
         home()
         
@@ -246,16 +260,20 @@ def choose_loop(menu, multiple):
     
     return result
 
-def choose(prompt, menu, multiple=False, fancy_menu=None):
+def choose(prompt, menu, multiple=False, fancy_menu=None, add_answer=False):
     if fancy_menu and len(menu) != len(fancy_menu):
         raise Exception
 
-    print(f'\033[41;37m{prompt.ljust(width, " ")}\033[0m')
+    promptPath.add_prompt(prompt)
+    print_prompt()
     print_menu(fancy_menu or menu)
     
     while True:
         try:
-            return choose_loop(menu, multiple)
+            choice = choose_loop(menu, multiple)
+            if add_answer:
+                promptPath.add_answer(choice)
+            return choice
         except InvalidChoice:
             resetLine()
             continue
@@ -313,7 +331,7 @@ def play_song(song, height, remaining_time):
         try:
             elapsed_time_str = format_time(elapsed_time)
             remaining_time_str = format_time(remaining_time - elapsed_time)
-            print(f'{up}\r\033[37;41m\033[{width - len(elapsed_time_str)}C{elapsed_time_str}\r{down}\033[0m\r{remaining_time_str}{" " * (width - len(remaining_time_str))}\r', end='')
+            print(f'{up}\r\033[37;41m\033[{width - len(elapsed_time_str)}C{elapsed_time_str}\r{down}\033[0m\r\033[31;48;5;233m{remaining_time_str.ljust(width, " ")}\033[0m\r', end='')
 
             cursor.hide()
             time.sleep(1)
@@ -372,13 +390,13 @@ def get_files(directory):
 def select_folder():
     folder = get_subfolders(uv_folder_path)
     _folders = [folder.split('\\')[-1] for folder in folder]
-    folder = choose("select folder", folder, fancy_menu=_folders)
+    folder = choose("select folder", folder, fancy_menu=_folders, add_answer=False)
     return folder
 
 def select_songs(folder):
     songs = get_files(folder)
     _songs = [song.split('\\')[-1][0:-4] for song in songs]
-    vibes = choose("select songs", songs, multiple=True, fancy_menu=_songs)
+    vibes = choose("select songs", songs, multiple=True, fancy_menu=_songs, add_answer=False)
     return vibes
 
 def select_folder_and_songs():
@@ -445,6 +463,7 @@ def main():
     
     clear()
     while True:
+        promptPath.reset_path()
         try:
             start_menu()
         except Home:
