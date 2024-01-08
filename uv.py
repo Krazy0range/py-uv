@@ -8,8 +8,6 @@ from pygame import mixer
 from mutagen.mp3 import MP3
 import cursor
 
-# TODO: add song length info
-
 width = 120
 uv_folder_path = 'C:\\Users\\Teo\\Documents\\UV'
 playlists_path = 'C:\\Users\\Teo\\Desktop\\hac\\piton-stuf\\py-uv\\playlists.json'
