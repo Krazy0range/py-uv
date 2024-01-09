@@ -8,7 +8,7 @@ from pygame import mixer
 from mutagen.mp3 import MP3
 import cursor
 
-width = 120
+width = os.get_terminal_size()[0] - 1
 uv_folder_path = 'C:\\Users\\Teo\\Documents\\UV'
 playlists_path = 'C:\\Users\\Teo\\Desktop\\hac\\piton-stuf\\py-uv\\playlists.json'
 
@@ -119,6 +119,12 @@ def play_playlist():
 
 # SYSTEM STUFF
 
+def hide_cursor():
+    cursor.hide()
+    
+def show_cursor():
+    cursor.show()
+
 def home():
     promptPath.reset_path()
     raise Home()
@@ -126,7 +132,7 @@ def home():
 def end():
     clear()
     print('\033[0m', end='')
-    cursor.show()
+    show_cursor()
     mixer.quit()
     sys.exit()
         
@@ -344,17 +350,17 @@ def play_song(song, height, remaining_time):
             remaining_time_str = format_time(remaining_time - elapsed_time)
             print(f'{up}\r\033[37;41m\033[{width - len(elapsed_time_str)}C{elapsed_time_str}\r{down}\033[0m\r\033[31;48;5;233m {remaining_time_str.ljust(width, " ")}\033[0m\r', end='')
 
-            cursor.hide()
+            hide_cursor()
             time.sleep(1)
             elapsed_time += 1
         except KeyboardInterrupt:
             mixer.music.stop()
-            cursor.show()
+            show_cursor()
             home()
             
     last_song_in_queue = height == 1
     if last_song_in_queue:
-        end()
+        home()
 
 def play_songs(songs, shuffle):    
     _songs = songs
