@@ -360,6 +360,7 @@ def play_song(song, height, remaining_time):
             
     last_song_in_queue = height == 1
     if last_song_in_queue:
+        show_cursor()
         home()
 
 def play_songs(songs, shuffle):    
