@@ -8,7 +8,7 @@ from pygame import mixer
 from mutagen.mp3 import MP3
 import cursor
 
-width = os.get_terminal_size()[0] - 1
+width = 120 # os.get_terminal_size()[0] - 1
 uv_folder_path = 'C:\\Users\\Teo\\Documents\\UV'
 playlists_path = 'C:\\Users\\Teo\\Desktop\\hac\\piton-stuf\\py-uv\\playlists.json'
 
